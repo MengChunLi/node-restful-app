@@ -1,8 +1,11 @@
-"use strict";
+/**
+ * 用來存放共用的js, 例如format date, time or ajax
+ */
+ "use strict";
 
 const http = require('http');
 
-var userList = {
+var Utils = {
 
   getJSON: (options, cb) => {
     http.request(options, function(res){
@@ -21,15 +24,9 @@ var userList = {
     })
     .on('error', cb)
     .end();
-  },
-
-  showUserInfo: (e) => {
-    e.preventDefault();
-    console.log(this);
   }
-
 
 
 };
 
-module.exports = userList;
+module.exports = Utils;

@@ -8,4 +8,4 @@ exports.toJSON = function(cb) {
     collection.find().toArray(function(err, docs){
         cb(err, docs);
     });
-}
+};
