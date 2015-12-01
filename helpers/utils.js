@@ -24,9 +24,14 @@ var Utils = {
     })
     .on('error', cb)
     .end();
+  },
+
+  // 提供querySelectorAll使用.each()
+  forEach: (array, callback, scope) => {
+    for (var i = 0; i < array.length; i++) {
+      callback.call(scope, i, array[i]); // passes back stuff we need
+    }
   }
-
-
 };
 
 module.exports = Utils;

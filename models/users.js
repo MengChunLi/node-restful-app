@@ -9,3 +9,10 @@ exports.toJSON = function(cb) {
         cb(err, docs);
     });
 };
+
+exports.addUser = function(body, cb){
+    var collection = db.get().collection('userlist');
+    collection.insert(body, function(err, result){
+        cb(err, result);
+    });
+};

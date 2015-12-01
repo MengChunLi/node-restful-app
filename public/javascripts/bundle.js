@@ -60,7 +60,6 @@
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	var userList = new _UserList2.default();
-	userList.init();
 
 /***/ },
 /* 2 */
@@ -78,34 +77,22 @@
 
 	var Utils = __webpack_require__(3);
 
+	var userListData = [];
+
 	var UserList = (function () {
 	  function UserList() {
 	    _classCallCheck(this, UserList);
+
+	    this.populate();
+	    this.bindAddUser();
 	  }
 
+	  /**
+	   * GET 填入使用者資料
+	   */
+
 	  _createClass(UserList, [{
-	    key: "showUserInfo",
-	    value: function showUserInfo(e) {
-	      e.preventDefault();
-	      console.log(this);
-	    }
-	  }, {
-	    key: "bindHandleClick",
-	    value: function bindHandleClick() {
-	      var $target = document.querySelector("#userList>table>tbody>tr");
-	      console.log($target);
-	      $target.click(function (event) {
-	        console.log("this");
-	        //showUserInfo();
-	      });
-	    }
-
-	    /**
-	     * ajax 填入使用者資料
-	     */
-
-	  }, {
-	    key: "populate",
+	    key: 'populate',
 	    value: function populate() {
 	      var _this = this;
 
@@ -114,14 +101,13 @@
 	        method: 'GET'
 	      };
 
-	      var self = this;
-
 	      Utils.getJSON(options, function (err, users) {
 	        if (err) {
 	          return console.log('Error while trying to get price: ', err);
 	        }
 	        var tableContent = '';
 	        var $container = document.querySelector("#userList table tbody");
+	        userListData = users;
 	        var _iteratorNormalCompletion = true;
 	        var _didIteratorError = false;
 	        var _iteratorError = undefined;
@@ -130,7 +116,7 @@
 	          for (var _iterator = users[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
 	            var user = _step.value;
 
-	            tableContent += "<tr>\n                            <td><a href=\"#\" class=\"linkshowuser\" rel=" + user.username + ">" + user.username + "</a></td>\n                            <td rel=" + user.username + ">" + user.email + "</td>\n                            <td><a href=\"#\" class=\"linkdeleteuser\">x</a></td>\n                          </tr>";
+	            tableContent += '<tr>\n                          <td><a href="#" class="linkshowuser" rel=' + user.username + '>' + user.username + '</a></td>\n                          <td rel=' + user.username + '>' + user.email + '</td>\n                          <td><a href="#" class="linkdeleteuser">x</a></td>\n                         </tr>';
 	          }
 	        } catch (err) {
 	          _didIteratorError = true;
@@ -148,14 +134,82 @@
 	        }
 
 	        $container.innerHTML = tableContent;
-	        _this.bindHandleClick();
-	        console.log(users, $container);
+	        var $linkShowUser = document.querySelector("#userList a.linkshowuser");
+	        $linkShowUser.addEventListener("click", _this.showUserInfo);
+	        //console.log(users, $container);
 	      });
 	    }
 	  }, {
-	    key: "init",
-	    value: function init() {
-	      this.populate();
+	    key: 'bindAddUser',
+	    value: function bindAddUser() {
+	      var $btnAddUser = document.querySelector("#btnAddUser");
+	      $btnAddUser.addEventListener("click", this.addUser);
+	    }
+
+	    /**
+	     * POST 新增使用者資料
+	     */
+
+	  }, {
+	    key: 'addUser',
+	    value: function addUser(e) {
+	      e.preventDefault();
+	      console.log('addd');
+	      var isEmpty = false;
+	      var EmptyCount = 0;
+	      var $inputList = document.querySelectorAll('#addUser input');
+	      Utils.forEach($inputList, function (index, item) {
+	        console.log(index, item);
+	        if (item.value === "") {
+	          EmptyCount++;
+	        }
+	      });
+	      console.log(EmptyCount);
+	      if (EmptyCount > 0) {
+	        isEmpty = true;
+	      }
+	      if (!isEmpty) {
+	        var newUser = {
+	          'username': document.querySelectorAll('#addUser input#inputUserName').value,
+	          'email': document.querySelectorAll('#addUser input#inputUserEmail').value,
+	          'fullname': document.querySelectorAll('#addUser input#inputUserFullname').value,
+	          'age': document.querySelectorAll('#addUser input#inputUserAge').value,
+	          'location': document.querySelectorAll('#addUser input#inputUserLocation').value,
+	          'gender': document.querySelectorAll('#addUser input#inputUserGender').value
+	        };
+
+	        var options = {
+	          path: '/users/adduser',
+	          data: newUser,
+	          method: 'POST',
+	          dataType: 'JSON'
+	        };
+	      }
+	    }
+
+	    /**
+	     * 顯示click的使用者資料
+	     */
+
+	  }, {
+	    key: 'showUserInfo',
+	    value: function showUserInfo(e) {
+	      e.preventDefault();
+	      console.log(this);
+	      var thisUserName = this.getAttribute('rel');
+	      // 取得資料表內目前姓名的index
+	      var arrayPosition = userListData.map(function (item) {
+	        return item.username;
+	      }).indexOf(thisUserName);
+	      var $userInfoName = document.querySelector("#userInfo #userInfoName");
+	      var $userInfoAge = document.querySelector("#userInfo #userInfoAge");
+	      var $userInfoGender = document.querySelector("#userInfo #userInfoGender");
+	      var $userInfoLocation = document.querySelector("#userInfo #userInfoLocation");
+	      $userInfoName.innerHTML = userListData[arrayPosition].username;
+	      $userInfoAge.innerHTML = userListData[arrayPosition].age;
+	      $userInfoGender.innerHTML = userListData[arrayPosition].gender;
+	      $userInfoLocation.innerHTML = userListData[arrayPosition].location;
+	      console.log($userInfoName);
 	    }
 	  }]);
 
@@ -179,23 +233,29 @@
 
 	var Utils = {
 
-	    getJSON: function getJSON(options, cb) {
-	        http.request(options, function (res) {
-	            var body = '';
+	  getJSON: function getJSON(options, cb) {
+	    http.request(options, function (res) {
+	      var body = '';
 
-	            res.on('data', function (chunk) {
-	                body += chunk;
-	            });
+	      res.on('data', function (chunk) {
+	        body += chunk;
+	      });
 
-	            res.on('end', function () {
-	                var result = JSON.parse(body);
-	                cb(null, result);
-	            });
+	      res.on('end', function () {
+	        var result = JSON.parse(body);
+	        cb(null, result);
+	      });
 
-	            res.on('error', cb);
-	        }).on('error', cb).end();
+	      res.on('error', cb);
+	    }).on('error', cb).end();
+	  },
+
+	  // 提供querySelectorAll使用.each()
+	  forEach: function forEach(array, callback, scope) {
+	    for (var i = 0; i < array.length; i++) {
+	      callback.call(scope, i, array[i]); // passes back stuff we need
 	    }
-
+	  }
 	};
 
 	module.exports = Utils;
