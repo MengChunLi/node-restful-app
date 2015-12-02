@@ -16,3 +16,10 @@ exports.addUser = function(body, cb){
         cb(err, result);
     });
 };
+
+exports.removeUser = function(item, cb){
+    var collection = db.get().collection('userlist');
+    collection.remove(item, function(err){
+        cb(err);
+    });
+};
