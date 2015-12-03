@@ -19,6 +19,7 @@ exports.addUser = function(body, cb){
 
 exports.removeUser = function(item, cb){
     var collection = db.get().collection('userlist');
+    console.log(collection);
     collection.remove(item, function(err){
         cb(err);
     });

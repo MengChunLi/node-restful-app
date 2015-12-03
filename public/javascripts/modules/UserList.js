@@ -4,12 +4,11 @@ var request = require('superagent');
 const Utils = require('../../../helpers/utils.js');
 
 let userListData = [];
-let populate; 
 
 class UserList {
 
   constructor() {
-    populate = this.populate();
+    this.populate();
     this.bindAddUser();
   }
 
@@ -17,36 +16,47 @@ class UserList {
    * GET 填入使用者資料
    */
   populate() {
+    let self = this;
     let options = {
-        path: '/users/userlist',
-        method: 'GET'
+        url: '/users/userlist',
+        method: 'GET',
+        type: 'json'
     };
 
-    Utils.getJSON(options, (err, users) => {
-      if(err){
-          return console.log('Error while trying to get price: ', err);
-      }
-      let tableContent = '';
-      let $container = document.querySelector("#userList table tbody");
-      userListData = users;
-      for(let user of users){
-        //console.log(user);
-        tableContent += `<tr>
-                          <td><a href="#" class="linkshowuser" rel=${user.username}>${user.username}</a></td>
-                          <td rel=${user.username}>${user.email}</td>
-                          <td><a href="#" class="linkdeleteuser" rel=${user._id}>x</a></td>
-                         </tr>`;
-      }
-      $container.innerHTML = tableContent;
-      // 綁定click顯示詳細資料
-      let $linkShowUser = document.querySelector("#userList a.linkshowuser");
-      $linkShowUser.addEventListener("click", this.showUserInfo);
-      // 綁定click刪除使用者資料
-      let $linkdeleteuser = document.querySelectorAll("#userList a.linkdeleteuser");
-      Utils.forEach($linkdeleteuser, (index, item) => {
-        item.addEventListener("click", this.deleteUser);
-      });
-      console.log(users);
+    request
+      .get(options.url)
+      .accept(options.type)
+      .end((err, res) => {
+        if(err){
+            return console.log('Error while trying to get price: ', err);
+        }
+        
+        let users = JSON.parse(res.text);
+        //console.log(users);
+        let tableContent = '';
+        let $container = document.querySelector("#userList table tbody");
+        userListData = users;
+        for(let user of users){
+          //console.log(user);
+          tableContent += `<tr>
+                            <td><a href="#" class="linkshowuser" rel=${user.username}>${user.username}</a></td>
+                            <td rel=${user.username}>${user.email}</td>
+                            <td><a href="#" class="linkdeleteuser" rel=${user._id}>x</a></td>
+                           </tr>`;
+        }
+        $container.innerHTML = tableContent;
+        // 綁定click顯示詳細資料
+        let $linkShowUser = document.querySelectorAll("#userList a.linkshowuser");
+        Utils.forEach($linkShowUser, (index, item) => {
+          item.addEventListener("click", this.showUserInfo);
+        });
+        // 綁定click刪除使用者資料
+        let $linkdeleteuser = document.querySelectorAll("#userList a.linkdeleteuser");
+        Utils.forEach($linkdeleteuser, (index, item) => {
+          //console.log(this, item);
+          item.addEventListener("click", self.deleteUser.bind(null, this, item));
+        });
+        //console.log(users);
     });
   
     //$linkdeleteuser.addEventListener("click", this.deleteUser);
@@ -106,27 +116,36 @@ class UserList {
           // 如果回應訊息是空字串表示成功
           if(res.text === ''){
             // Clear the form inputs
-            document.querySelector('#addUser fieldset input').value = "";
+            let $allFields = document.querySelectorAll('#addUser fieldset input');
+            Utils.forEach($allFields, (index, item) => {
+              item.value = "";
+            });
             // Update the table
             this.populate();
           }else{
             console.log('Error: ' + res.text);
           }
         });
+    }else{
+      alert('Please fill in all fields');
+      return false;
     }
   }
 
   /**
    * DELETE 刪除某個使用者資料
    */
-  deleteUser(e) {
+  deleteUser(self, item, e) {
+    //console.log('item: ', item, 'self: ', self, 'e: ', e);
     e.preventDefault();
-    console.log(this.getAttribute('rel'));
-    let confirmation = confirm('Are you sure you want to delete this user?');
+    
     let options = {
-      url: '/users/deleteuser/' + this.getAttribute('rel')
+      url: '/users/deleteuser/' + item.getAttribute('rel')
     };
-
+    
+    let confirmation = confirm('Are you sure you want to delete this user?');
+    
+    
     if (confirmation === true) {
       request
         .del(options.url)
@@ -134,11 +153,10 @@ class UserList {
           if(err) throw err;
           // 如果回應訊息是空字串表示成功
           if(res.text === ''){
-            console.log('DELETE!: ' + res.text);
           }else{
             console.log('Error: ' + res.text);
           }
-          populate;
+          self.populate();
         });
     }else{
       return false;

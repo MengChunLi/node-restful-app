@@ -1,6 +1,7 @@
 var express = require('express');
 var router = express.Router();
 var Users = require('../models/users');
+var ObjectId = require('mongodb').ObjectID;
 
 /* GET users listing. */
 router.get('/userlist', function(req, res, next) {
@@ -23,7 +24,8 @@ router.post('/adduser', function(req, res){
 router.delete('/deleteuser/:id', function(req, res){
   var userToDelete = req.params.id;
   console.log(userToDelete);
-  Users.removeUser({ '_id' : userToDelete }, function(err){
+  // 必須把字串轉成ObjectId
+  Users.removeUser({ '_id' : ObjectId(userToDelete) }, function(err){
     res.send(
       (err === null) ? '' : err 
     );
